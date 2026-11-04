@@ -5,8 +5,8 @@ A 3D-printable, screwless enclosure for a Raspberry Pi Zero W with a Waveshare
 
 The outside is 70.6 × 61.8 × 35.2 mm, plus a mounting ear on each side.
 
-Neither the printed enclosure nor the viewer has been tried on real hardware
-yet. The viewer has only been tested in Chrome with an emulated Quest 2.
+The viewer has been used on a real Quest to review the model. The enclosure
+hasn't been printed or test-fitted yet.
 
 ## Design
 
@@ -36,6 +36,23 @@ Before printing, measure the gap from the Zero's top surface to the HAT's
 underside. It's set by `stack_gap` in `cad/enclosure.scad`, currently 14 mm.
 The 2.4 mm pins are moulded in and can't be replaced, so print a small test of
 the fit first.
+
+## Test prints
+
+Print these before the base, in `test-prints/`. `cad/build.sh` regenerates them
+from `cad/test_prints.scad`.
+
+- **`pin_fit.stl`:** eight labelled pin diameters from 2.2 to 2.9 mm, with a bar
+  beside the current size. Try each one in the corner holes of the real boards,
+  letting the rest of the board overhang the strip. Sizes 2.8 and 2.9 are for
+  the HAT only, as the Zero's holes are 2.75 mm.
+- **`pin_layout.stl`:** all six pins at their true positions and heights, with
+  the walls removed. Seat the Zero on it alone, then the assembled stack. The
+  GPIO label marks the header end. The HAT should rest on the two tall posts at
+  the same time as the Zero rests on the four short ones.
+
+If a pin size needs changing, set `pin_d` in `cad/enclosure.scad`. If the HAT
+sits high or low on the tall posts, adjust `stack_gap`.
 
 ## Changing the model
 
@@ -85,7 +102,7 @@ Quest Browser and accept the certificate warning. Then choose **Enter VR** or
 
 | Control | Action |
 | --- | --- |
-| Trigger | Next view: closed, lid off, exploded, boards only |
+| Trigger | Next view: closed, lid off, exploded, boards only, then the test prints |
 | Grip | Hold to move and turn the model |
 | Thumbstick | Up/down resizes, left/right spins |
 | A or X | Cables on or off |
@@ -96,7 +113,9 @@ In a desktop browser, drag to orbit and press Space for the next view.
 ## Layout
 
 - `cad/enclosure.scad`: the model
+- `cad/test_prints.scad`: the pin test prints
 - `cad/build.sh`: exports the STL files and manifest
 - `viewer/main.js`: the WebXR viewer
 - `viewer/serve.mjs`: the HTTPS server
+- `test-prints/`: generated test print STL files
 - `viewer/models/`: generated STL files

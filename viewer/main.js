@@ -8,12 +8,18 @@ const START_POSITION = new THREE.Vector3(0, 1.1, -0.6);
 const MIN_SCALE = 1;
 const MAX_SCALE = 15;
 
-// Part lift along the model's z axis, in mm
+const ENCLOSURE = ['base', 'lid', 'zero', 'hat', 'plugs'];
+const BOARDS = ['zero', 'hat', 'plugs'];
+
+// Part lift along the model's z axis, in mm; parts not listed stay at 0
 const VIEWS = [
-  { name: 'Closed', lift: { base: 0, zero: 0, plugs: 0, hat: 0, lid: 0 } },
-  { name: 'Lid off', lift: { base: 0, zero: 0, plugs: 0, hat: 0, lid: 50 } },
-  { name: 'Exploded', lift: { base: 0, zero: 22, plugs: 22, hat: 55, lid: 95 } },
-  { name: 'Boards only', lift: { base: 0, zero: 0, plugs: 0, hat: 0, lid: 0 }, hide: ['base', 'lid'] },
+  { name: 'Closed', show: ENCLOSURE, lift: {} },
+  { name: 'Lid off', show: ENCLOSURE, lift: { lid: 50 } },
+  { name: 'Exploded', show: ENCLOSURE, lift: { zero: 22, plugs: 22, hat: 55, lid: 95 } },
+  { name: 'Boards only', show: BOARDS, lift: {} },
+  { name: 'Pin size test', show: ['pin_fit'], lift: {} },
+  { name: 'Pin layout test', show: ['pin_layout'], lift: {} },
+  { name: 'Pin layout + boards', show: ['pin_layout', ...BOARDS], lift: {} },
 ];
 
 const statusEl = document.getElementById('status');
@@ -50,8 +56,14 @@ cad.scale.setScalar(MM);
 model.add(cad);
 scene.add(model);
 
-const parts = { base: new THREE.Group(), lid: new THREE.Group(), zero: new THREE.Group(), hat: new THREE.Group(), plugs: new THREE.Group() };
-for (const p of Object.values(parts)) cad.add(p);
+const parts = {};
+for (const name of [...ENCLOSURE, 'pin_fit', 'pin_layout']) {
+  parts[name] = new THREE.Group();
+  cad.add(parts[name]);
+}
+// The strip is modelled on the diagonal from its first pin; lay it out square and centred
+parts.pin_fit.rotation.z = Math.PI / 4;
+parts.pin_fit.position.x = -34.6;
 
 function resetModel() {
   model.position.copy(START_POSITION);
@@ -89,7 +101,7 @@ function drawLabel() {
   c.fill();
   c.fillStyle = '#ffffff';
   c.font = '600 54px system-ui, sans-serif';
-  c.fillText(`${VIEWS[view].name}  ·  ${model.scale.x.toFixed(1)}× actual size`, 44, 84);
+  c.fillText(`${VIEWS[view].name}  ·  ${model.scale.x.toFixed(1)}×`, 44, 84);
   c.fillStyle = '#c3cad5';
   c.font = '40px system-ui, sans-serif';
   [
@@ -102,9 +114,9 @@ function drawLabel() {
 }
 
 function applyVisibility() {
-  const hidden = VIEWS[view].hide ?? [];
-  for (const [name, group] of Object.entries(parts)) group.visible = !hidden.includes(name);
-  parts.plugs.visible = showCables;
+  const { show } = VIEWS[view];
+  for (const [name, group] of Object.entries(parts))
+    group.visible = show.includes(name) && (name !== 'plugs' || showCables);
   drawLabel();
 }
 
@@ -184,7 +196,7 @@ function animateParts(dt) {
   const { lift } = VIEWS[view];
   const k = 1 - Math.exp(-dt * 8);
   for (const [name, group] of Object.entries(parts))
-    group.position.z += (lift[name] - group.position.z) * k;
+    group.position.z += ((lift[name] ?? 0) - group.position.z) * k;
 }
 
 // Desktop preview
@@ -272,4 +284,5 @@ export const inspect = () => ({
   parent: model.parent === scene ? 'scene' : 'controller',
   lid: parts.lid.position.z,
   presenting: renderer.xr.isPresenting,
+  visible: Object.keys(parts).filter((name) => parts[name].visible),
 });
