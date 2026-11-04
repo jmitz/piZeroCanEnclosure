@@ -7,11 +7,12 @@
 // The HAT is 26 mm deeper than the Zero, so the Zero's ports sit under the HAT
 // overhang. Cables run straight through that bay and out of the -y wall.
 //
-// No screws: the boards locate on plastic pins moulded into the base. The Zero
-// sits on all four of its holes, the HAT on its two far corners and the GPIO
-// header. The lid clamps the stack.
+// Boards are held by M2.5 self-tapping screws driven down into pilot holes: the
+// Zero at all four holes, then the HAT at its two far corners. The HAT's GPIO
+// end sits on the header, and the lid presses it down.
 //
-// part: "base", "lid", "zero", "hat", "plugs", "assembly"
+// part: "base", "lid", "zero", "hat", "plugs", "zero_screws", "hat_screws",
+//       "assembly"
 part = "assembly";
 // layer: export only this colour, because STL can't carry more than one
 layer = "";
@@ -25,10 +26,15 @@ wall = 2.2;
 floor_t = 2;
 top_t = 2;
 post_h = 3;     // floor to Zero underside; clears header solder tails
-pin_d = 2.4;    // fits the Zero's 2.75 mm and the HAT's 3 mm holes
-pin_tip = 1.5;  // pin length above a board
+pilot_d = 2.2;  // M2.5 self-tapping
+zero_pilot_h = 4;
+hat_pilot_h = 9;
+zero_screw_l = 5;
+hat_screw_l = 8;
+screw_d = 2.5;
+head_d = 5;
+head_h = 2;
 hold_d = 5.5;   // lid hold-down tube
-hold_bore = 3.1;
 corner_r = 4;
 
 hat_x = 65.2;  hat_y = 56.4;  hat_t = 1.6;
@@ -125,19 +131,18 @@ module base() {
                 cylinder(d = 6, h = zero_z);
             for (s = [-1, 1]) far_post(s);
 
-            at_holes([-hole_x, hole_x], [gpio_y, zero_far_y])
-                translate([0, 0, zero_z - 0.01])
-                    cylinder(d = pin_d, h = zero_t + pin_tip);
-            at_holes([-hole_x, hole_x], [hat_far_y])
-                translate([0, 0, hat_z - 0.01])
-                    cylinder(d = pin_d, h = hat_t + pin_tip);
-
             // Mounting ears
             for (s = [-1, 1]) linear_extrude(3) hull() {
                 translate([s*(out_x + 5), 0]) circle(d = 10);
                 translate([s*(out_x - 2), 0]) square([4, 16], center = true);
             }
         }
+
+        // Screw pilots, blind so the underside stays flat
+        at_holes([-hole_x, hole_x], [gpio_y, zero_far_y])
+            translate([0, 0, zero_z - zero_pilot_h]) cylinder(d = pilot_d, h = zero_pilot_h + 1);
+        at_holes([-hole_x, hole_x], [hat_far_y])
+            translate([0, 0, hat_z - hat_pilot_h]) cylinder(d = pilot_d, h = hat_pilot_h + 1);
 
         // Cable openings under the HAT
         bay_z = floor_t + 1;
@@ -163,13 +168,11 @@ module base() {
     }
 }
 
-// Press the HAT down on its far pins and, at the GPIO end, the header onto the Zero
+// Press the HAT's unscrewed GPIO end onto the header
 module hold_downs() {
-    at_holes([-hole_x, hole_x], [gpio_y, hat_far_y])
-        translate([0, 0, hat_top + 0.1]) difference() {
+    at_holes([-hole_x, hole_x], [gpio_y])
+        translate([0, 0, hat_top + 0.1])
             cylinder(d = hold_d, h = inner_top - hat_top);
-            translate([0, 0, -1]) cylinder(d = hold_bore, h = pin_tip + 1.5);
-        }
 }
 
 module lid() {
@@ -194,6 +197,23 @@ module lid() {
         // Power LED window
         translate([-28, 9.5, inner_top - 1]) cylinder(d = 3, h = top_t + 2);
     }
+}
+
+module screw(z, l) {
+    translate([0, 0, z]) {
+        translate([0, 0, -l]) cylinder(d = screw_d, h = l + 0.01);
+        cylinder(d = head_d, h = head_h);
+    }
+}
+
+module zero_screws() {
+    paint("#c8c8c8") at_holes([-hole_x, hole_x], [gpio_y, zero_far_y])
+        screw(zero_top, zero_screw_l);
+}
+
+module hat_screws() {
+    paint("#c8c8c8") at_holes([-hole_x, hole_x], [hat_far_y])
+        screw(hat_top, hat_screw_l);
 }
 
 module zero() {
@@ -276,10 +296,14 @@ else if (part == "lid") paint("#e8e8ea") lid();
 else if (part == "zero") zero();
 else if (part == "hat") hat();
 else if (part == "plugs") plugs();
+else if (part == "zero_screws") zero_screws();
+else if (part == "hat_screws") hat_screws();
 else if (part == "assembly") {
     paint("#e8e8ea") base();
     zero();
     hat();
     plugs();
+    zero_screws();
+    hat_screws();
     color("#e8e8ea", 0.35) translate([0, 0, 30]) lid();
 }

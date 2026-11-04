@@ -1,6 +1,6 @@
 # Pi Zero CAN Enclosure
 
-A 3D-printable, screwless enclosure for a Raspberry Pi Zero W with a Waveshare
+A 3D-printable enclosure for a Raspberry Pi Zero W with a Waveshare
 2-CH CAN HAT, plus a WebXR viewer for inspecting the model on a Meta Quest.
 
 **[Open the viewer](https://jmitz.github.io/piZeroCanEnclosure/)** in the Quest
@@ -13,10 +13,10 @@ hasn't been printed or test-fitted yet.
 
 ## Design
 
-- **Boards:** the Zero sits on four pins moulded into the base. The HAT sits on
-  two pins at its far corners and on the GPIO header at the other end.
-- **Lid:** snaps on, and its four hold-down tubes clamp the stack. The boards
-  can lift off their pins while the lid is off.
+- **Boards:** the Zero screws down at all four holes. The HAT screws down at
+  its two far corners and sits on the GPIO header at the other end.
+- **Lid:** snaps on, and two hold-down tubes press the HAT's GPIO end onto the
+  header.
 - **Cables:** the HAT overhangs the Zero's ports, so the mini-HDMI and micro-USB
   cables run under the HAT and out through two openings in the base wall below
   the CAN terminals. Right-angle plugs won't fit.
@@ -33,29 +33,26 @@ Print these two files:
 - `viewer/models/base-e8e8ea.stl`
 - `viewer/models/lid-e8e8ea.stl`
 
-The Zero needs a soldered 2×20 header. No screws or metal standoffs are used.
+Hole positions and the 14 mm `stack_gap` were confirmed with a printed test
+frame. The printed pins used before were too weak, so the boards now use screws.
 
-Before printing, measure the gap from the Zero's top surface to the HAT's
-underside. It's set by `stack_gap` in `cad/enclosure.scad`, currently 14 mm.
-The 2.4 mm pins are moulded in and can't be replaced, so print a small test of
-the fit first.
+## Assembly
 
-## Test prints
+The Zero needs a soldered 2×20 header.
 
-Print these before the base, in `test-prints/`. `cad/build.sh` regenerates them
-from `cad/test_prints.scad`.
+| Hardware | Qty | Used for |
+| --- | --- | --- |
+| M2.5 × 5 self-tapping pan head screw | 4 | Zero to the short posts |
+| M2.5 × 8 self-tapping pan head screw | 2 | HAT to the tall posts |
 
-- **`pin_fit.stl`:** eight labelled pin diameters from 2.2 to 2.9 mm, with a bar
-  beside the current size. Try each one in the corner holes of the real boards,
-  letting the rest of the board overhang the strip. Sizes 2.8 and 2.9 are for
-  the HAT only, as the Zero's holes are 2.75 mm.
-- **`pin_layout.stl`:** all six pins at their true positions and heights, with
-  the walls removed. Seat the Zero on it alone, then the assembled stack. The
-  GPIO label marks the header end. The HAT should rest on the two tall posts at
-  the same time as the Zero rests on the four short ones.
+The screws cut their own thread in the 2.2 mm pilot holes, so go gently.
 
-If a pin size needs changing, set `pin_d` in `cad/enclosure.scad`. If the HAT
-sits high or low on the tall posts, adjust `stack_gap`.
+1. Screw the Zero down.
+2. Plug the HAT onto the header.
+3. Screw down the HAT's far corners.
+4. Snap on the lid.
+
+The pilot size is `pilot_d` in `cad/enclosure.scad`.
 
 ## Changing the model
 
@@ -75,7 +72,7 @@ that opens in the Quest Browser. Choose **Enter VR** or **Enter passthrough**.
 
 | Control | Action |
 | --- | --- |
-| Trigger | Next view: closed, lid off, exploded, boards only, then the test prints |
+| Trigger | Next view: closed, lid off, exploded, boards only |
 | Grip | Hold to move and turn the model |
 | Thumbstick | Up/down resizes, left/right spins |
 | A or X | Cables on or off |
@@ -124,10 +121,8 @@ Quest Browser and accept the certificate warning.
 ## Layout
 
 - `cad/enclosure.scad`: the model
-- `cad/test_prints.scad`: the pin test prints
 - `cad/build.sh`: exports the STL files and manifest
 - `viewer/main.js`: the WebXR viewer
 - `viewer/serve.mjs`: the local HTTPS server
 - `viewer/build_site.sh`: assembles the static site for hosting
-- `test-prints/`: generated test print STL files
 - `viewer/models/`: generated STL files
