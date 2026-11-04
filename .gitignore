@@ -1,0 +1,4 @@
+node_modules/
+
+# Local TLS key and certificate for the viewer
+viewer/.cert/

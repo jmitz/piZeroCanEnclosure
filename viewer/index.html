@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pi Zero CAN Enclosure</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #14171c; color: #e9ecf1; font: 16px/1.45 system-ui, sans-serif; overflow: hidden; }
+  canvas { display: block; }
+  #panel { position: fixed; left: 24px; top: 24px; max-width: 340px; padding: 20px; background: #1e232bee; border-radius: 12px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  p { margin: 0 0 14px; color: #aeb6c2; }
+  button { display: block; width: 100%; margin-top: 10px; padding: 16px; font: 600 18px system-ui, sans-serif; color: #fff; background: #2f6fdb; border: 0; border-radius: 8px; cursor: pointer; }
+  button.alt { background: #3a424e; }
+  button:disabled { background: #2a2f37; color: #7b8491; cursor: default; }
+  #status { margin: 12px 0 0; font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="panel">
+  <h1>Pi Zero CAN Enclosure</h1>
+  <p>Raspberry Pi Zero W with Waveshare 2-CH CAN HAT.</p>
+  <button id="vr" disabled>Enter VR</button>
+  <button id="ar" class="alt" disabled>Enter passthrough</button>
+  <p id="status">Loading…</p>
+</div>
+<script type="importmap">
+{ "imports": {
+  "three": "./node_modules/three/build/three.module.js",
+  "three/addons/": "./node_modules/three/examples/jsm/"
+} }
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
