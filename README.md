@@ -3,6 +3,9 @@
 A 3D-printable, screwless enclosure for a Raspberry Pi Zero W with a Waveshare
 2-CH CAN HAT, plus a WebXR viewer for inspecting the model on a Meta Quest.
 
+**[Open the viewer](https://jmitz.github.io/piZeroCanEnclosure/)** in the Quest
+Browser, or on a desktop browser to preview it.
+
 The outside is 70.6 × 61.8 × 35.2 mm, plus a mounting ear on each side.
 
 The viewer has been used on a real Quest to review the model. The enclosure
@@ -65,10 +68,29 @@ cad/build.sh
 This needs OpenSCAD. STL can't carry colour, so each colour of each part is
 exported as its own file, named `<part>-<colour>.stl`.
 
-## Running the viewer
+## Using the viewer
 
 No Meta developer account or sideloading is needed. The viewer is a web page
-that opens in the Quest Browser, and it needs HTTPS because WebXR does.
+that opens in the Quest Browser. Choose **Enter VR** or **Enter passthrough**.
+
+| Control | Action |
+| --- | --- |
+| Trigger | Next view: closed, lid off, exploded, boards only, then the test prints |
+| Grip | Hold to move and turn the model |
+| Thumbstick | Up/down resizes, left/right spins |
+| A or X | Cables on or off |
+| B or Y | Reset the model's size and position |
+
+In a desktop browser, drag to orbit and press Space for the next view.
+
+The site is published to GitHub Pages by `.github/workflows/pages.yml` on every
+push to `main`. It serves the committed files in `viewer/models/`, so run
+`cad/build.sh` and commit the result after changing the model.
+
+## Running the viewer locally
+
+Use this to try changes before pushing. WebXR needs HTTPS, so the local server
+uses a self-signed certificate.
 
 Install the dependencies, and create a certificate for this machine's LAN IP
 address. Repeat the certificate step if the address changes.
@@ -97,18 +119,7 @@ sudo ufw allow from 192.168.0.0/24 to any port 8443 proto tcp
 ```
 
 On the Quest, join the same Wi-Fi network, open the printed address in the
-Quest Browser and accept the certificate warning. Then choose **Enter VR** or
-**Enter passthrough**.
-
-| Control | Action |
-| --- | --- |
-| Trigger | Next view: closed, lid off, exploded, boards only, then the test prints |
-| Grip | Hold to move and turn the model |
-| Thumbstick | Up/down resizes, left/right spins |
-| A or X | Cables on or off |
-| B or Y | Reset the model's size and position |
-
-In a desktop browser, drag to orbit and press Space for the next view.
+Quest Browser and accept the certificate warning.
 
 ## Layout
 
@@ -116,6 +127,7 @@ In a desktop browser, drag to orbit and press Space for the next view.
 - `cad/test_prints.scad`: the pin test prints
 - `cad/build.sh`: exports the STL files and manifest
 - `viewer/main.js`: the WebXR viewer
-- `viewer/serve.mjs`: the HTTPS server
+- `viewer/serve.mjs`: the local HTTPS server
+- `viewer/build_site.sh`: assembles the static site for hosting
 - `test-prints/`: generated test print STL files
 - `viewer/models/`: generated STL files
