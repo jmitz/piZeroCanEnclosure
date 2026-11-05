@@ -8,15 +8,17 @@ Browser, or on a desktop browser to preview it.
 
 The outside is 70.6 × 61.8 × 35.2 mm, plus a mounting ear on each side.
 
-The viewer has been used on a real Quest to review the model. The enclosure
-hasn't been printed or test-fitted yet.
+The viewer has been used on a real Quest to review the model. The first print
+was fragile where the walls met the floor and top, and this version with fillets
+hasn't been printed yet.
 
 ## Design
 
 - **Boards:** the Zero screws down at all four holes. The HAT screws down at
   its two far corners and sits on the GPIO header at the other end.
-- **Lid:** snaps on, and two hold-down tubes press the HAT's GPIO end onto the
-  header.
+- **Lid:** snaps on. Nothing inside it touches the HAT.
+- **Walls:** every inside corner, and every join to the floor or lid top, has a
+  3 mm fillet (`fillet_r`), because the first print was fragile at those joins.
 - **Cables:** the HAT overhangs the Zero's ports, so the mini-HDMI and micro-USB
   cables run under the HAT and out through two openings in the base wall below
   the CAN terminals. Right-angle plugs won't fit.

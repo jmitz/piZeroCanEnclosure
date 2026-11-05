@@ -9,7 +9,7 @@
 //
 // Boards are held by M2.5 self-tapping screws driven down into pilot holes: the
 // Zero at all four holes, then the HAT at its two far corners. The HAT's GPIO
-// end sits on the header, and the lid presses it down.
+// end is held by the header.
 //
 // part: "base", "lid", "zero", "hat", "plugs", "zero_screws", "hat_screws",
 //       "assembly"
@@ -34,8 +34,8 @@ hat_screw_l = 8;
 screw_d = 2.5;
 head_d = 5;
 head_h = 2;
-hold_d = 5.5;   // lid hold-down tube
 corner_r = 4;
+fillet_r = 3;   // inside corners, and walls to floor and top; at most post_h
 
 hat_x = 65.2;  hat_y = 56.4;  hat_t = 1.6;
 zero_x = 65;   zero_y = 30;   zero_t = 1.4;
@@ -72,6 +72,9 @@ split_z = hat_top;
 tongue_h = 3;
 fit = 0.15;
 
+assert(fillet_r <= post_h);
+inner_r = fillet_r;
+
 in_x = hat_x/2 + clr;
 in_y = hat_y/2 + clr;
 out_x = in_x + wall;
@@ -88,6 +91,25 @@ module rounded(hx, hy, h, r) {
         offset(r) square([2*(hx - r), 2*(hy - r)], center = true);
 }
 
+module rounded_2d(hx, hy, r) {
+    offset(r) square([2*(hx - r), 2*(hy - r)], center = true);
+}
+
+// Round the inside corners of the material around a 2D cavity outline
+module fillet_corners() {
+    offset(r = fillet_r) offset(r = -fillet_r) children();
+}
+
+// The cavity end next to a floor at z=0, narrowing onto it along a concave arc
+module fillet_end(steps = 12) {
+    dz = fillet_r/steps;
+    for (i = [0:steps - 1]) {
+        arc = fillet_r - (i + 0.5)*dz;
+        translate([0, 0, i*dz]) linear_extrude(dz + 0.01)
+            offset(r = -(fillet_r - sqrt(fillet_r*fillet_r - arc*arc))) children();
+    }
+}
+
 module at_holes(xs, ys) {
     for (x = xs, y = ys) translate([x, y, 0]) children();
 }
@@ -98,10 +120,41 @@ module terminal_cuts(z0, h) {
             cube([t[1] - t[0] + 1.2, out_y + 1 - 21.6, h]);
 }
 
-module far_post(sign) {
-    x0 = sign > 0 ? 27.2 : -in_x - 0.1;
-    translate([x0, -in_y - 0.1, 0])
-        cube([in_x + 0.1 - 27.2, in_y + 0.1 + hat_far_y + 2.75, hat_z]);
+module far_posts_2d() {
+    for (s = [-1, 1]) translate([s > 0 ? 27.2 : -in_x - 0.1, -in_y - 0.1])
+        square([in_x + 0.1 - 27.2, in_y + 0.1 + hat_far_y + 2.75]);
+}
+
+module zero_posts_2d() {
+    for (x = [-hole_x, hole_x], y = [gpio_y, zero_far_y])
+        translate([x, y]) circle(d = 6);
+}
+
+module cavity_2d() {
+    rounded_2d(in_x, in_y, inner_r);
+}
+
+// Everything cut out of the base shell. The cuts stop around the posts, so the
+// posts and their fillets are part of the shell. The far post fillets stop short
+// of the HAT, to clear the through-hole pins of its side connectors.
+module base_cavity() {
+    pin_clear_z = hat_z - 2;
+    translate([0, 0, floor_t]) fillet_end() fillet_corners() difference() {
+        cavity_2d();
+        far_posts_2d();
+        zero_posts_2d();
+    }
+    translate([0, 0, zero_z]) linear_extrude(pin_clear_z - zero_z + 0.01)
+        fillet_corners() difference() {
+            cavity_2d();
+            far_posts_2d();
+        }
+    translate([0, 0, pin_clear_z]) linear_extrude(hat_z - pin_clear_z + 0.01)
+        difference() {
+            cavity_2d();
+            far_posts_2d();
+        }
+    translate([0, 0, hat_z]) linear_extrude(split_z - hat_z + 1) cavity_2d();
 }
 
 module snap_ridge(sign, grow = 0) {
@@ -116,20 +169,15 @@ module base() {
         union() {
             difference() {
                 rounded(out_x, out_y, split_z, corner_r);
-                translate([0, 0, floor_t])
-                    rounded(in_x, in_y, split_z, corner_r - wall);
+                base_cavity();
             }
             // Lid locating tongue
             translate([0, 0, split_z - 0.01]) difference() {
                 rounded(tongue_x, tongue_y, tongue_h, corner_r - wall/2);
                 translate([0, 0, -1])
-                    rounded(in_x, in_y, tongue_h + 2, corner_r - wall);
+                    rounded(in_x, in_y, tongue_h + 2, inner_r);
             }
             for (s = [-1, 1]) snap_ridge(s);
-
-            at_holes([-hole_x, hole_x], [gpio_y, zero_far_y])
-                cylinder(d = 6, h = zero_z);
-            for (s = [-1, 1]) far_post(s);
 
             // Mounting ears
             for (s = [-1, 1]) linear_extrude(3) hull() {
@@ -149,7 +197,7 @@ module base() {
         bay_h = hat_z - 1.5 - bay_z;
         for (r = [[-27.2, -13], [2.5, 27.2]])
             translate([r[0], -out_y - 1, bay_z])
-                cube([r[1] - r[0], wall + 2, bay_h]);
+                cube([r[1] - r[0], wall + 1 + fillet_r, bay_h]);
 
         // SD card slot, with a finger scoop in the outside face
         translate([-out_x - 1, sd_y - 7, zero_top - 0.5])
@@ -168,21 +216,14 @@ module base() {
     }
 }
 
-// Press the HAT's unscrewed GPIO end onto the header
-module hold_downs() {
-    at_holes([-hole_x, hole_x], [gpio_y])
-        translate([0, 0, hat_top + 0.1])
-            cylinder(d = hold_d, h = inner_top - hat_top);
-}
-
 module lid() {
-    hold_downs();
     difference() {
         translate([0, 0, split_z + fit]) rounded(out_x, out_y, total_h - split_z - fit, corner_r);
         translate([0, 0, split_z])
             rounded(tongue_x + fit, tongue_y + fit, tongue_h + 0.3, corner_r - wall/2);
         translate([0, 0, split_z + tongue_h + 0.2])
-            rounded(in_x, in_y, inner_top - split_z - tongue_h - 0.2, corner_r - wall);
+            rounded(in_x, in_y, inner_top - fillet_r - split_z - tongue_h - 0.2 + 0.01, inner_r);
+        translate([0, 0, inner_top]) mirror([0, 0, 1]) fillet_end() cavity_2d();
         for (s = [-1, 1]) snap_ridge(s, 0.15);
 
         // Wire entry and screwdriver access, open at the bottom so the lid
